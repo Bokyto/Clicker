@@ -6,15 +6,18 @@ import Upgrades from "./components/upgrades/Upgrades";
 import EnergyRestore from "./components/energyRestore/EnergyRestore";
 import ProgressBar from './components/progressBar/ProgressBar';
 import './/App.css';
+
 const App: React.FC = () => {
   const [score, setScore] = useState<number>(0);
-  const [energy, setEnergy] = useState<number>(100);
+  const [energy, setEnergy] = useState<number>(20);
+  const [maxEnergy, setMaxEnergy] = useState<number>(20);
   const [autoClickerCount, setAutoClickerCount] = useState<number>(0);
   const [pointsPerClick, setPointsPerClick] = useState<number>(1);
   const [level, setLevel] = useState<number>(1);
   const [progress, setProgress] = useState<number>(0);
   const [maxProgress, setMaxProgress] = useState<number>(100);
   const [energyRestoreCost, setEnergyRestoreCost] = useState<number>(20);
+  const [isInShop, setIsInShop] = useState<boolean>(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -25,6 +28,16 @@ const App: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [autoClickerCount, pointsPerClick, energy]);
+
+  useEffect(() => {
+    const energyInterval = setInterval(() => {
+      if (energy < maxEnergy) {
+        setEnergy(prevEnergy => prevEnergy + 1);
+      }
+    }, 5000);
+
+    return () => clearInterval(energyInterval);
+  }, [energy, maxEnergy]);
 
   const handleClick = () => {
     if (energy > 0) {
@@ -37,7 +50,6 @@ const App: React.FC = () => {
 
   const checkLevelUp = () => {
     if (progress >= maxProgress) {
-      setLevel(prevLevel => prevLevel + 1);
       setProgress(0);
       setMaxProgress(prevMaxProgress => prevMaxProgress + 50);
       setPointsPerClick(prevPoints => prevPoints + 1);
@@ -59,11 +71,40 @@ const App: React.FC = () => {
     }
   };
 
+  const handleBuyEnergyUpgrade = () => {
+    const cost = 50; // Стоимость увеличения энергии
+    if (score >= cost) {
+      setScore(prevScore => prevScore - cost);
+      setMaxEnergy(prevMaxEnergy => prevMaxEnergy + 10);
+      setEnergy(prevEnergy => prevEnergy + 10); 
+    }
+  };
+
+  const handleBuyLevel = () => {
+    const levelCost = calculateLevelCost();
+    if (score >= levelCost) {
+      setScore(prevScore => prevScore - levelCost);
+      setLevel(prevLevel => prevLevel + 1);
+    }
+  };
+
+  const calculateLevelCost = () => {
+    return 100 * Math.pow(10, level - 1);
+  };
+
   const handleRestoreEnergy = () => {
     if (score >= energyRestoreCost) {
       setScore(prevScore => prevScore - energyRestoreCost);
-      setEnergy(100);
+      setEnergy(maxEnergy);
     }
+  };
+
+  const handleEnterShop = () => {
+    setIsInShop(true);
+  };
+
+  const handleExitShop = () => {
+    setIsInShop(false);
   };
 
   return (
@@ -71,14 +112,25 @@ const App: React.FC = () => {
       <h1>Простой кликер</h1>
       <ScoreDisplay score={score} />
       <EnergyDisplay energy={energy} />
-      <ProgressBar progress={progress} maxProgress={maxProgress} />
-      <ClickerButton onClick={handleClick} />
-      <Upgrades
-        score={score}
-        onBuyAutoClicker={handleBuyAutoClicker}
-        onBuyPointsPerClick={handleBuyPointsPerClick}
-      />
-      <EnergyRestore score={score} onRestoreEnergy={handleRestoreEnergy} />
+      {!isInShop ? (
+        <>
+          <ClickerButton onClick={handleClick} className="clicker-button" />
+          <button onClick={handleEnterShop} className="shop-button">Перейти в магазин</button>
+        </>
+      ) : (
+        <>
+          <button onClick={handleExitShop} className="shop-button">Выйти из магазин</button>
+          <Upgrades
+            score={score}
+            onBuyAutoClicker={handleBuyAutoClicker}
+            onBuyPointsPerClick={handleBuyPointsPerClick}
+            onBuyEnergyUpgrade={handleBuyEnergyUpgrade}
+            onBuyLevel={handleBuyLevel}
+            levelCost={calculateLevelCost()}
+          />
+          <EnergyRestore score={score} onRestoreEnergy={handleRestoreEnergy} />
+        </>
+      )}
       <div>Уровень: {level}</div>
     </div>
   );

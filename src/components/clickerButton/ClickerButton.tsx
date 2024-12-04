@@ -1,7 +1,8 @@
 import React from "react";
-
+import './ClickerButton.css';
 interface ClickerButtonProps {
-    onClick : () => void;
+    onClick : () => void; 
+    className?: string; 
 };
 
 const ClickerButton: React.FC<ClickerButtonProps> = ({onClick}) => {

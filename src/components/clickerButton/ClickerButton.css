@@ -1,0 +1,9 @@
+.clicker-button {
+    padding: 10px 20px;
+    font-size: 1.5em;
+    cursor: pointer;
+    background-color: #61dafb;
+    border: none;
+    border-radius: 5px;
+    color: white;
+  }
